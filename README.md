@@ -4,6 +4,7 @@ Este projeto eh um ensaio para analisar se a ferramente ElasticSearch serve para
 No caso seguiremos com a versão 6.8 embora esta não seja a mais recente pelo fato de ser a versão suportada pelo SpringBoot Data.
 
 [Tutorial básico do ElasticSearch] (https://www.elastic.co/guide/en/elasticsearch/reference/6.8/index.html)
+
 [Tutorial sobre o uso do "Java High Level REST Client"] (https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high-compatibility.html)
 
 [Uso de sinônimos no ElasticSearch] (https://www.elastic.co/pt/blog/boosting-the-power-of-elasticsearch-with-synonyms)

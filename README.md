@@ -8,3 +8,11 @@ No caso seguiremos com a versão 6.8 embora esta não seja a mais recente pelo f
 [Tutorial sobre o uso do "Java High Level REST Client"] (https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high-compatibility.html)
 
 [Uso de sinônimos no ElasticSearch] (https://www.elastic.co/pt/blog/boosting-the-power-of-elasticsearch-with-synonyms)
+
+Comandos:
+
+Informaçõs sobre os índices: http://localhost:9200/_cat/indices?v
+
+Apenas os nomes dos índices: curl http://localhost:9200/_aliases?pretty=true
+
+

@@ -25,3 +25,6 @@ curl -X GET "localhost:9200/_analyze?pretty" -H 'Content-Type: application/json'
   "analyzer" : "standard",
   "text" : "Arruela"
 }'
+
+curl  -H 'Content-Type: application/json' -X GET  "localhost:9200/idx_produto/produto/_search?q=junta+gol"
+curl  -H 'Content-Type: application/json' -X GET  "localhost:9200/idx_produto/produto/_search?q=junta+golf"

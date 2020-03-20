@@ -16,6 +16,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import org.elasticsearch.search.Scroll;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 /**
@@ -37,6 +38,7 @@ public class PesquisaPaginada {
     public static void main(String args[]) {
         PesquisaPaginada s = new PesquisaPaginada();
         s.pesquisar();
+        client.close();
     }
 
     private void pesquisar() {
@@ -50,7 +52,14 @@ public class PesquisaPaginada {
 
             SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
             String scrollId = searchResponse.getScrollId();
-            SearchHit[] searchHits = searchResponse.getHits().getHits();
+            
+            SearchHits hits = searchResponse.getHits();
+            long totalHits = hits.getTotalHits();
+            float maxScore = hits.getMaxScore();
+            System.out.println("Totais de hits : " + totalHits);
+            System.out.println("Maior score    : " + maxScore);
+            
+            SearchHit[] searchHits = hits.getHits();
 
             while (searchHits != null && searchHits.length > 0) {
 
@@ -60,7 +69,7 @@ public class PesquisaPaginada {
                 scrollId = searchResponse.getScrollId();
                 //searchHits = searchResponse.getHits().getHits();
                 for (SearchHit hit : searchResponse.getHits().getHits()) {
-                    System.out.println("Type     : " + hit.getType());
+                    System.out.println("Type     : " + hit.getType() + "\t Scole : " + hit.getScore());
                     System.out.println("Document : " + hit.getSourceAsString());
                 }
 

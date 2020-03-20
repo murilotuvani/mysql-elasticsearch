@@ -10,11 +10,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.DocWriteResponse;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
@@ -29,6 +34,9 @@ import org.elasticsearch.common.xcontent.XContentType;
  * @author murilotuvani
  */
 public class Update {
+
+    private static final String INDEX = "itens";
+    private static final String TYPE = "item";
 
     private Connection conn = null;
     private final String host = "localhost";
@@ -95,11 +103,12 @@ public class Update {
     private void produtos() throws SQLException {
         ProdutoDao pd = new ProdutoDao(conn);
         long qtd = pd.quantidade();
-        int itensPorPagina = 100;
+        int itensPorPagina = 1000;
         int paginaAtual = 1;
         List<Produto> lista = null;
         do {
             lista = pd.listar(paginaAtual++, itensPorPagina);
+            adicionarImagens(lista);
             if (lista != null && !lista.isEmpty()) {
                 enviar(lista);
             }
@@ -109,11 +118,35 @@ public class Update {
 
     private void enviar(List<Produto> lista) {
         final Gson gson = (new GsonBuilder()).setDateFormat("yyyy-MM-dd HH:mm:ss.SSS").setPrettyPrinting().create();
+        if (true) {
+            enviarBulk(gson, lista);
+        } else {
+            enviarIndividualmente(gson, lista);
+        }
+    }
+
+    private void enviarBulk(Gson gson, List<Produto> lista) {
+        BulkRequest bulkRequest = new BulkRequest();
+        lista.forEach(p -> {
+            String jsonString = gson.toJson(p);
+            IndexRequest request = new IndexRequest(INDEX).type(TYPE)
+                    .index(INDEX).source(jsonString, XContentType.JSON)
+                    .id(Integer.toString(p.getCodigo())).opType(DocWriteRequest.OpType.CREATE);
+            bulkRequest.add(request);
+        });
+        try {
+            client.bulk(bulkRequest, RequestOptions.DEFAULT);
+        } catch (IOException ex) {
+            ex.printStackTrace(System.err);
+        }
+    }
+
+    private void enviarIndividualmente(Gson gson, List<Produto> lista) {
         lista.forEach(p -> {
             try {
                 String jsonString = gson.toJson(p);
-                IndexRequest request = new IndexRequest("produtos").type("produto")
-                        .index("idx_produto").source(jsonString, XContentType.JSON)
+                IndexRequest request = new IndexRequest(INDEX).type(TYPE)
+                        .index(INDEX).source(jsonString, XContentType.JSON)
                         .id(Integer.toString(p.getCodigo())).opType(DocWriteRequest.OpType.CREATE);
 
                 IndexResponse indexResponse = client.index(request, RequestOptions.DEFAULT);
@@ -138,9 +171,35 @@ public class Update {
             } catch (IOException ex) {
                 ex.printStackTrace(System.err);
             }
-
         });
+    }
 
+    private void adicionarImagens(List<Produto> lista) throws SQLException {
+        LongStream codigos = lista.stream().mapToInt(Produto::getCodigo).asLongStream();
+        final StringBuilder sb = new StringBuilder();
+        codigos.forEachOrdered(codigo -> {
+            if (sb.length() == 0) {
+                sb.append(" WHERE CODIGO_PRODUTO IN (");
+            } else {
+                sb.append(",");
+            }
+            sb.append(codigo);
+        });
+        
+        final Map<Integer, Produto> mapaProdutosPorCodigo = lista.stream().collect(Collectors.toMap(Produto::getCodigo, Function.identity()));
+        
+        if (sb.length() > 0) {
+            sb.append(")");
+            ProdutoImagemDao pid = new ProdutoImagemDao(getCnnnection());
+            List<ProdutoImagem> imagens = pid.listar(sb.toString());
+            Map<Integer, List<ProdutoImagem>> mapaImagensPorProduto = imagens.stream()
+                    .collect(Collectors.groupingBy(ProdutoImagem::getProdutoCodigo, Collectors.toList()));
+            mapaImagensPorProduto.forEach((codigo, listaImagens) -> {
+                if (mapaProdutosPorCodigo.containsKey(codigo)) {
+                    mapaProdutosPorCodigo.get(codigo).setImagens(listaImagens);
+                }
+            });
+        }
     }
 
 }

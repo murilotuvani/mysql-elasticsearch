@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package br.com.autogeral.elasticsearch.dbf2elasticsearch;
 
 /**
@@ -12,8 +6,17 @@ package br.com.autogeral.elasticsearch.dbf2elasticsearch;
  */
 public class ProdutoImagem {
     
+    private transient int produtoCodigo;
     private String objetivo;
     private String link;
+
+    public int getProdutoCodigo() {
+        return produtoCodigo;
+    }
+
+    public void setProdutoCodigo(int produtoCodigo) {
+        this.produtoCodigo = produtoCodigo;
+    }
 
     public String getObjetivo() {
         return objetivo;

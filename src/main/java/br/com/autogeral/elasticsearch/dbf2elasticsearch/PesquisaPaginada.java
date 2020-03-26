@@ -30,15 +30,19 @@ public class PesquisaPaginada {
     private static final String INDEX = "itens";
     private static final String TYPE = "item";
 
-    private final RestHighLevelClient client = new RestHighLevelClient(
+    private static final RestHighLevelClient client = new RestHighLevelClient(
             RestClient.builder(
                     new HttpHost("localhost", 9200, "http")
             ));
 
     public static void main(String args[]) {
-        PesquisaPaginada s = new PesquisaPaginada();
-        s.pesquisar();
-        client.close();
+        try {
+            PesquisaPaginada s = new PesquisaPaginada();
+            s.pesquisar();
+            client.close();
+        } catch (IOException ex) {
+            Logger.getLogger(PesquisaPaginada.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void pesquisar() {

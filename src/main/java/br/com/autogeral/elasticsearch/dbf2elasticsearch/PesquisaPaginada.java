@@ -30,15 +30,19 @@ public class PesquisaPaginada {
     private static final String INDEX = "itens";
     private static final String TYPE = "item";
 
-    private final RestHighLevelClient client = new RestHighLevelClient(
+    private static final RestHighLevelClient client = new RestHighLevelClient(
             RestClient.builder(
                     new HttpHost("localhost", 9200, "http")
             ));
 
     public static void main(String args[]) {
-        PesquisaPaginada s = new PesquisaPaginada();
-        s.pesquisar();
-        client.close();
+        try {
+            PesquisaPaginada s = new PesquisaPaginada();
+            s.pesquisar();
+            client.close();
+        } catch (IOException ex) {
+            Logger.getLogger(PesquisaPaginada.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void pesquisar() {
@@ -47,7 +51,12 @@ public class PesquisaPaginada {
             SearchRequest searchRequest = new SearchRequest(INDEX);
             searchRequest.scroll(scroll);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(matchQuery("descricao", "Golf+Terminal"));
+            searchSourceBuilder.query(matchQuery("descricao", "tampa do reservatório de oleo do gol g4"));
+            // Limitando o numero de documentos retornados
+            // @see https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high-search.html
+            int documentos = 10;
+            searchSourceBuilder.from(0);
+            searchSourceBuilder.size(documentos);
             searchRequest.source(searchSourceBuilder);
 
             SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);

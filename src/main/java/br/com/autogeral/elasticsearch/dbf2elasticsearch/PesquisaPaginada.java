@@ -51,7 +51,12 @@ public class PesquisaPaginada {
             SearchRequest searchRequest = new SearchRequest(INDEX);
             searchRequest.scroll(scroll);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(matchQuery("descricao", "Golf+Terminal"));
+            searchSourceBuilder.query(matchQuery("descricao", "tampa do reservatório de oleo do gol g4"));
+            // Limitando o numero de documentos retornados
+            // @see https://www.elastic.co/guide/en/elasticsearch/client/java-rest/master/java-rest-high-search.html
+            int documentos = 10;
+            searchSourceBuilder.from(0);
+            searchSourceBuilder.size(documentos);
             searchRequest.source(searchSourceBuilder);
 
             SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);

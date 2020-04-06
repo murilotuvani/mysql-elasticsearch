@@ -24,6 +24,7 @@ public class Produto {
     private String descricaoSite;
     private String descricaoLonga;
     private String marca;
+    private List<ProdutoEstoque> estoques = new ArrayList<>();
     private List<ProdutoImagem> imagens = new ArrayList<>();
 
     public int getCodigo() {
@@ -136,6 +137,14 @@ public class Produto {
 
     public void setMarca(String marca) {
         this.marca = marca;
+    }
+
+    public List<ProdutoEstoque> getEstoques() {
+        return estoques;
+    }
+
+    public void setEstoques(List<ProdutoEstoque> estoques) {
+        this.estoques = estoques;
     }
 
     public List<ProdutoImagem> getImagens() {

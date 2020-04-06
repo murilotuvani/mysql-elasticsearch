@@ -108,7 +108,25 @@ public class Update {
         List<Produto> lista = null;
         do {
             lista = pd.listar(paginaAtual++, itensPorPagina);
-            adicionarImagens(lista);
+            LongStream codigos = lista.stream().mapToInt(Produto::getCodigo).asLongStream();
+            final StringBuilder sb = new StringBuilder();
+            codigos.forEachOrdered(codigo -> {
+                if (sb.length() == 0) {
+                    sb.append(" WHERE CODIGO_PRODUTO IN (");
+                } else {
+                    sb.append(",");
+                }
+                sb.append(codigo);
+            });
+
+            final Map<Integer, Produto> mapaProdutosPorCodigo = lista.stream().collect(Collectors.toMap(Produto::getCodigo, Function.identity()));
+            if (sb.length() > 0) {
+                sb.append(")");
+            }
+            String where = sb.toString();
+            adicionarImagens(lista, mapaProdutosPorCodigo, where);
+            
+            adicionarEstoques(lista, mapaProdutosPorCodigo, where.replace("CODIGO_PRODUTO", "PRODUTO_CODIGO"));
             if (lista != null && !lista.isEmpty()) {
                 enviar(lista);
             }
@@ -174,32 +192,27 @@ public class Update {
         });
     }
 
-    private void adicionarImagens(List<Produto> lista) throws SQLException {
-        LongStream codigos = lista.stream().mapToInt(Produto::getCodigo).asLongStream();
-        final StringBuilder sb = new StringBuilder();
-        codigos.forEachOrdered(codigo -> {
-            if (sb.length() == 0) {
-                sb.append(" WHERE CODIGO_PRODUTO IN (");
-            } else {
-                sb.append(",");
+    private void adicionarImagens(List<Produto> lista, Map<Integer, Produto> mapaProdutosPorCodigo, String where) throws SQLException {
+        ProdutoImagemDao pid = new ProdutoImagemDao(getCnnnection());
+        List<ProdutoImagem> imagens = pid.listar(where);
+        Map<Integer, List<ProdutoImagem>> mapaImagensPorProduto = imagens.stream()
+                .collect(Collectors.groupingBy(ProdutoImagem::getProdutoCodigo, Collectors.toList()));
+        mapaImagensPorProduto.forEach((codigo, listaImagens) -> {
+            if (mapaProdutosPorCodigo.containsKey(codigo)) {
+                mapaProdutosPorCodigo.get(codigo).setImagens(listaImagens);
             }
-            sb.append(codigo);
         });
-        
-        final Map<Integer, Produto> mapaProdutosPorCodigo = lista.stream().collect(Collectors.toMap(Produto::getCodigo, Function.identity()));
-        
-        if (sb.length() > 0) {
-            sb.append(")");
-            ProdutoImagemDao pid = new ProdutoImagemDao(getCnnnection());
-            List<ProdutoImagem> imagens = pid.listar(sb.toString());
-            Map<Integer, List<ProdutoImagem>> mapaImagensPorProduto = imagens.stream()
-                    .collect(Collectors.groupingBy(ProdutoImagem::getProdutoCodigo, Collectors.toList()));
-            mapaImagensPorProduto.forEach((codigo, listaImagens) -> {
-                if (mapaProdutosPorCodigo.containsKey(codigo)) {
-                    mapaProdutosPorCodigo.get(codigo).setImagens(listaImagens);
-                }
-            });
-        }
     }
 
+    private void adicionarEstoques(List<Produto> lista, Map<Integer, Produto> mapaProdutosPorCodigo, String where) throws SQLException {
+        ProdutoEstoqueDao pid = new ProdutoEstoqueDao(getCnnnection());
+        List<ProdutoEstoque> imagens = pid.listar(where);
+        Map<Integer, List<ProdutoEstoque>> mapaEstoquesPorProduto = imagens.stream()
+                .collect(Collectors.groupingBy(ProdutoEstoque::getProdutoCodigo, Collectors.toList()));
+        mapaEstoquesPorProduto.forEach((codigo, listaEstoques) -> {
+            if (mapaProdutosPorCodigo.containsKey(codigo)) {
+                mapaProdutosPorCodigo.get(codigo).setEstoques(listaEstoques);
+            }
+        });
+    }
 }

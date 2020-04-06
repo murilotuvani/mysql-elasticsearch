@@ -17,7 +17,7 @@ Apenas os nomes dos índices: curl http://localhost:9200/_aliases?pretty=true
 
 
 docker network create somenetwork
-docker run -d --name elasticsearch --net somenetwork -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.6.0
+docker run -d --name elasticsearch -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" elasticsearch:7.6.0
 
 
 docker rm -f elasticsearch
@@ -38,11 +38,14 @@ curl -X GET "localhost:9200/?pretty" -H 'Content-Type: application/json'
 Mostra os índices
 curl -X GET "localhost:9200/_cat/indices?pretty" -H 'Content-Type: application/json'
 
-Detalha o índice "idx_produto"
-curl -X GET "localhost:9200/idx_produto?pretty" -H 'Content-Type: application/json'
+Detalha o índice "itens"
+curl -X GET "localhost:9200/itens?pretty" -H 'Content-Type: application/json'
 
 Pesquisa por arruela
-curl -X GET "localhost:9200/idx_produto/produto/_search?q=arruela" -H 'Content-Type: application/json'
+curl -X GET "localhost:9200/itens/item/_search?q=arruela" -H 'Content-Type: application/json'
+
+Pega o item com id=100
+curl -X GET "localhost:9200/itens/item/100?pretty" -H 'Content-Type: application/json'
 
 
 curl -H "Content-Type: application/json" http://localhost:9200/produtos/_analyze?text=Arruela

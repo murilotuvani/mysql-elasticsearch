@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpHost;
+import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.ClearScrollResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -63,22 +64,26 @@ public class PesquisaPaginada {
             String scrollId = searchResponse.getScrollId();
             
             SearchHits hits = searchResponse.getHits();
-            long totalHits = hits.getTotalHits();
+            //long totalHits = hits.getTotalHits();
+            TotalHits totalHits = hits.getTotalHits();
             float maxScore = hits.getMaxScore();
             System.out.println("Totais de hits : " + totalHits);
             System.out.println("Maior score    : " + maxScore);
             
             SearchHit[] searchHits = hits.getHits();
 
-            while (searchHits != null && searchHits.length > 0) {
+            if (searchHits != null && searchHits.length > 0) {
 
                 SearchScrollRequest scrollRequest = new SearchScrollRequest(scrollId);
                 scrollRequest.scroll(scroll);
                 searchResponse = client.scroll(scrollRequest, RequestOptions.DEFAULT);
                 scrollId = searchResponse.getScrollId();
                 //searchHits = searchResponse.getHits().getHits();
-                for (SearchHit hit : searchResponse.getHits().getHits()) {
-                    System.out.println("Type     : " + hit.getType() + "\t Scole : " + hit.getScore());
+
+                SearchHit[] theHits = hits.getHits();
+                for (int i = 0; i < 10 && i < searchHits.length; i++) {
+                    SearchHit hit = theHits[i];
+                    System.out.println("Score    : " + hit.getScore());
                     System.out.println("Document : " + hit.getSourceAsString());
                 }
 

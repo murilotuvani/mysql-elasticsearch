@@ -17,7 +17,7 @@ import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 public class PesquisaAleatoria {
 
     private static final String INDEX = "itens";
-    private static final String TYPE = "item";
+//    private static final String TYPE = "item";
     
 
     private static final RestHighLevelClient client = new RestHighLevelClient(

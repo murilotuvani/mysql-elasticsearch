@@ -17,14 +17,22 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
+import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 
@@ -47,11 +55,34 @@ public class Update {
     private final RestHighLevelClient client;
 
     public Update() {
-        client = new RestHighLevelClient(
-                RestClient.builder(
-                        new HttpHost("localhost", 9200, "http")
-                //new HttpHost("localhost", 9201, "http")));
-                ));
+        boolean remote = Boolean.parseBoolean(System.getProperty("remote", "false"));
+        
+        if (remote) {
+            final CredentialsProvider credentialsProvider
+                    = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY,
+                    new UsernamePasswordCredentials("elastic", "rNAdgtWGeQfKRXTFxbofOTAj"));
+
+            //9ae735505071462aa3c783169a4744ed.southamerica-east1.gcp.elastic-cloud.com:9243
+            RestClientBuilder builder = RestClient.builder(
+                    new HttpHost("9ae735505071462aa3c783169a4744ed.southamerica-east1.gcp.elastic-cloud.com", 9243, "https"))
+                    .setHttpClientConfigCallback(new HttpClientConfigCallback() {
+                        @Override
+                        public HttpAsyncClientBuilder customizeHttpClient(
+                                HttpAsyncClientBuilder httpClientBuilder) {
+                            httpClientBuilder.disableAuthCaching();
+                            return httpClientBuilder
+                                    .setDefaultCredentialsProvider(credentialsProvider);
+                        }
+                    });
+            client = new RestHighLevelClient(builder);
+        } else {
+            client = new RestHighLevelClient(
+                    RestClient.builder(
+                            new HttpHost("localhost", 9200, "http")
+                    //new HttpHost("localhost", 9201, "http")));
+                    ));
+        }
     }
 
     private Connection getCnnnection() throws SQLException {
@@ -103,7 +134,7 @@ public class Update {
     private void produtos() throws SQLException {
         ProdutoDao pd = new ProdutoDao(conn);
         long qtd = pd.quantidade();
-        int itensPorPagina = 1000;
+        int itensPorPagina = 5000;
         int paginaAtual = 1;
         List<Produto> lista = null;
         do {
@@ -147,13 +178,16 @@ public class Update {
         BulkRequest bulkRequest = new BulkRequest();
         lista.forEach(p -> {
             String jsonString = gson.toJson(p);
-            IndexRequest request = new IndexRequest(INDEX).type(TYPE)
+            IndexRequest request = new IndexRequest(INDEX)
                     .index(INDEX).source(jsonString, XContentType.JSON)
-                    .id(Integer.toString(p.getCodigo())).opType(DocWriteRequest.OpType.CREATE);
+                    .id(Integer.toString(p.getCodigo())).opType(DocWriteRequest.OpType.INDEX);
             bulkRequest.add(request);
         });
         try {
-            client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            BulkResponse result = client.bulk(bulkRequest, RequestOptions.DEFAULT);
+            if (result.hasFailures()) {
+                System.out.println("Request failure : " + result.buildFailureMessage());
+            }
         } catch (IOException ex) {
             ex.printStackTrace(System.err);
         }
@@ -165,7 +199,7 @@ public class Update {
                 String jsonString = gson.toJson(p);
                 IndexRequest request = new IndexRequest(INDEX).type(TYPE)
                         .index(INDEX).source(jsonString, XContentType.JSON)
-                        .id(Integer.toString(p.getCodigo())).opType(DocWriteRequest.OpType.CREATE);
+                        .id(Integer.toString(p.getCodigo())).opType(DocWriteRequest.OpType.INDEX);
 
                 IndexResponse indexResponse = client.index(request, RequestOptions.DEFAULT);
 

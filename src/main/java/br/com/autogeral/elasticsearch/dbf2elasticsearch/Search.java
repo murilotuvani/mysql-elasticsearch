@@ -77,7 +77,7 @@ public class Search {
             boolean timedOut = searchResponse.isTimedOut();
 
             SearchHits hits = searchResponse.getHits();
-            long totalHits = hits.getTotalHits();
+            long totalHits = hits.getTotalHits().value;
             float maxScore = hits.getMaxScore();
             System.out.println("Totais de hits : " + totalHits);
             System.out.println("Maior score    : " + maxScore);

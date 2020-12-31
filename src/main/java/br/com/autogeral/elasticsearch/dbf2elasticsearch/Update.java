@@ -44,7 +44,6 @@ import org.elasticsearch.common.xcontent.XContentType;
 public class Update {
 
     private static final String INDEX = "itens";
-    private static final String TYPE = "item";
 
     private Connection conn = null;
     private final String host = "localhost";
@@ -94,7 +93,9 @@ public class Update {
 
     public static void main(String args[]) {
         try {
-            Class.forName("com.mysql.jdbc.Driver");
+            //Class.forName("com.mysql.jdbc.Driver");
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            
             Update update = new Update();
             update.vendedores();
             update.produtos();
@@ -197,7 +198,7 @@ public class Update {
         lista.forEach(p -> {
             try {
                 String jsonString = gson.toJson(p);
-                IndexRequest request = new IndexRequest(INDEX).type(TYPE)
+                IndexRequest request = new IndexRequest(INDEX)
                         .index(INDEX).source(jsonString, XContentType.JSON)
                         .id(Integer.toString(p.getCodigo())).opType(DocWriteRequest.OpType.INDEX);
 

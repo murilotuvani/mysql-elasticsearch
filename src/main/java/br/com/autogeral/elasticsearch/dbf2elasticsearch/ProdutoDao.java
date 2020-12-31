@@ -76,12 +76,12 @@ public class ProdutoDao extends Dao {
         //p.setCest(getIntOrNull(rs, "CEST"));
         //p.setCodigoAnp(getIntOrNull(rs, "CODIGO_ANP"));
         p.setPesoLiquido(rs.getDouble("PESO_LIQUIDO"));
-//        p.setLarguraProduto(getIntOrNull(rs, "LARGURA_PRODUTO"));
-//        p.setAlturaProduto(getIntOrNull(rs, "ALTURA_PRODUTO"));
-//        p.setProfundidadeProduto(getIntOrNull(rs, "PROFUNDIDADE_PRODUTO"));
-//        p.setLarguraEmbalagem(getIntOrNull(rs, "LARGURA_EMBALAGEM"));
-//        p.setAlturaEmbalagem(getIntOrNull(rs, "ALTURA_EMBALAGEM"));
-//        p.setProfundidadeEmbalagem(getIntOrNull(rs, "PROFUNDIDADE_EMBALAGEM"));
+        p.setLarguraProduto(getDoubleOrNull(rs, "LARGURA_PRODUTO"));
+        p.setAlturaProduto(getDoubleOrNull(rs, "ALTURA_PRODUTO"));
+        p.setProfundidadeProduto(getDoubleOrNull(rs, "PROFUNDIDADE_PRODUTO"));
+        p.setLarguraEmbalagem(getDoubleOrNull(rs, "LARGURA_EMBALAGEM"));
+        p.setAlturaEmbalagem(getDoubleOrNull(rs, "ALTURA_EMBALAGEM"));
+        p.setProfundidadeEmbalagem(getDoubleOrNull(rs, "PROFUNDIDADE_EMBALAGEM"));
         p.setDescricaoSite(getStringOrNull(rs, "DESCRICAO_SITE"));
         p.setDescricaoLonga(getStringOrNull(rs, "DESCRICAO_LONGA"));
         p.setDisponivel(rs.getDouble("DISPONIVEL"));

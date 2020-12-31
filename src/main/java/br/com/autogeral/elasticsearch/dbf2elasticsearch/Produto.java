@@ -20,13 +20,19 @@ public class Produto {
     private double disponivel;
     private double preco;
     private double pesoLiquido;
+    private Double alturaProduto;
+    private Double larguraProduto;
+    private Double profundidadeProduto;
+    private Double alturaEmbalagem;
+    private Double larguraEmbalagem;
+    private Double profundidadeEmbalagem;
     private String descricao;
     private String descricaoSite;
     private String descricaoLonga;
     private String marca;
     private List<ProdutoEstoque> estoques = new ArrayList<>();
     private List<ProdutoImagem> imagens = new ArrayList<>();
-
+    
     public int getCodigo() {
         return codigo;
     }
@@ -107,6 +113,54 @@ public class Produto {
         this.pesoLiquido = pesoLiquido;
     }
 
+    public Double getAlturaProduto() {
+        return alturaProduto;
+    }
+
+    public void setAlturaProduto(Double alturaProduto) {
+        this.alturaProduto = alturaProduto;
+    }
+
+    public Double getLarguraProduto() {
+        return larguraProduto;
+    }
+
+    public void setLarguraProduto(Double larguraProduto) {
+        this.larguraProduto = larguraProduto;
+    }
+
+    public Double getProfundidadeProduto() {
+        return profundidadeProduto;
+    }
+
+    public void setProfundidadeProduto(Double profundidadeProduto) {
+        this.profundidadeProduto = profundidadeProduto;
+    }
+
+    public Double getAlturaEmbalagem() {
+        return alturaEmbalagem;
+    }
+
+    public void setAlturaEmbalagem(Double alturaEmbalagem) {
+        this.alturaEmbalagem = alturaEmbalagem;
+    }
+
+    public Double getLarguraEmbalagem() {
+        return larguraEmbalagem;
+    }
+
+    public void setLarguraEmbalagem(Double larguraEmbalagem) {
+        this.larguraEmbalagem = larguraEmbalagem;
+    }
+
+    public Double getProfundidadeEmbalagem() {
+        return profundidadeEmbalagem;
+    }
+
+    public void setProfundidadeEmbalagem(Double profundidadeEmbalagem) {
+        this.profundidadeEmbalagem = profundidadeEmbalagem;
+    }
+    
     public String getDescricao() {
         return descricao;
     }

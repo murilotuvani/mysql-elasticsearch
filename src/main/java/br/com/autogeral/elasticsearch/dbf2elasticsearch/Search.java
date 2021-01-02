@@ -5,10 +5,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.common.unit.TimeValue;
@@ -37,11 +43,36 @@ public class Search {
     }
 
     public Search() {
-        client = new RestHighLevelClient(
-                RestClient.builder(
-                        new HttpHost("localhost", 9200, "http")
-                //new HttpHost("localhost", 9201, "http")));
-                ));
+        boolean remote = Boolean.parseBoolean(System.getProperty("remote", "true"));
+        
+        if (remote) {
+            final CredentialsProvider credentialsProvider
+                    = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY,
+                    new UsernamePasswordCredentials("elastic", "kid30O2NShycZeci4jQH1xYm"));
+
+            //9ae735505071462aa3c783169a4744ed.southamerica-east1.gcp.elastic-cloud.com:9243
+            RestClientBuilder builder = RestClient.builder(
+                    //new HttpHost("51b5229a8a15488cb513743b307925ef.southamerica-east1.gcp.elastic-cloud.com", 9243, "https"))
+                    new HttpHost("146.148.50.104", 9243, "http"))
+                    
+                    .setHttpClientConfigCallback(new RestClientBuilder.HttpClientConfigCallback() {
+                        @Override
+                        public HttpAsyncClientBuilder customizeHttpClient(
+                                HttpAsyncClientBuilder httpClientBuilder) {
+                            httpClientBuilder.disableAuthCaching();
+                            return httpClientBuilder
+                                    .setDefaultCredentialsProvider(credentialsProvider);
+                        }
+                    });
+            client = new RestHighLevelClient(builder);
+        } else {
+            client = new RestHighLevelClient(
+                    RestClient.builder(
+                            new HttpHost("localhost", 9200, "http")
+                    //new HttpHost("localhost", 9201, "http")));
+                    ));
+        }
     }
 
     private void pesquisar() {

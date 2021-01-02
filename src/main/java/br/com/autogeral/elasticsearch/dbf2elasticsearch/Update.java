@@ -47,24 +47,26 @@ public class Update {
 
     private Connection conn = null;
     private final String host = "localhost";
-    private final String port = "3306";
+    private final String port = "3309";
     private final String database = "autogeral";
-    private final String user = "root";
-    private final String password = "root";
+    private final String user = "murilo.tuvani";
+    private final String password = "@Aleggria7";
     private final RestHighLevelClient client;
 
     public Update() {
-        boolean remote = Boolean.parseBoolean(System.getProperty("remote", "false"));
+        boolean remote = Boolean.parseBoolean(System.getProperty("remote", "true"));
         
         if (remote) {
             final CredentialsProvider credentialsProvider
                     = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(AuthScope.ANY,
-                    new UsernamePasswordCredentials("elastic", "rNAdgtWGeQfKRXTFxbofOTAj"));
+                    new UsernamePasswordCredentials("elastic", "kid30O2NShycZeci4jQH1xYm"));
 
             //9ae735505071462aa3c783169a4744ed.southamerica-east1.gcp.elastic-cloud.com:9243
             RestClientBuilder builder = RestClient.builder(
-                    new HttpHost("9ae735505071462aa3c783169a4744ed.southamerica-east1.gcp.elastic-cloud.com", 9243, "https"))
+                    //new HttpHost("51b5229a8a15488cb513743b307925ef.southamerica-east1.gcp.elastic-cloud.com", 9243, "https"))
+                    new HttpHost("146.148.50.104", 9243, "http"))
+                    
                     .setHttpClientConfigCallback(new HttpClientConfigCallback() {
                         @Override
                         public HttpAsyncClientBuilder customizeHttpClient(

@@ -32,7 +32,6 @@ import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
-import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 
@@ -49,32 +48,22 @@ public class Update {
     private final String host = "localhost";
     private final String port = "3309";
     private final String database = "autogeral";
-    private final String user = "murilo.tuvani";
-    private final String password = "@Aleggria7";
+    private final String user = "root";
+    private final String password = "root";
     private final RestHighLevelClient client;
 
     public Update() {
         boolean remote = Boolean.parseBoolean(System.getProperty("remote", "true"));
         
         if (remote) {
-            final CredentialsProvider credentialsProvider
-                    = new BasicCredentialsProvider();
-            credentialsProvider.setCredentials(AuthScope.ANY,
-                    new UsernamePasswordCredentials("elastic", "kid30O2NShycZeci4jQH1xYm"));
-
-            //9ae735505071462aa3c783169a4744ed.southamerica-east1.gcp.elastic-cloud.com:9243
+            final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials("elastic", ""));
             RestClientBuilder builder = RestClient.builder(
-                    //new HttpHost("51b5229a8a15488cb513743b307925ef.southamerica-east1.gcp.elastic-cloud.com", 9243, "https"))
-                    new HttpHost("146.148.50.104", 9243, "http"))
-                    
-                    .setHttpClientConfigCallback(new HttpClientConfigCallback() {
-                        @Override
-                        public HttpAsyncClientBuilder customizeHttpClient(
-                                HttpAsyncClientBuilder httpClientBuilder) {
-                            httpClientBuilder.disableAuthCaching();
-                            return httpClientBuilder
-                                    .setDefaultCredentialsProvider(credentialsProvider);
-                        }
+                    new HttpHost("servername", 9243, "https"))
+                    .setHttpClientConfigCallback((HttpAsyncClientBuilder httpClientBuilder) -> {
+                        httpClientBuilder.disableAuthCaching();
+                        return httpClientBuilder
+                                .setDefaultCredentialsProvider(credentialsProvider);
                     });
             client = new RestHighLevelClient(builder);
         } else {
@@ -86,7 +75,7 @@ public class Update {
         }
     }
 
-    private Connection getCnnnection() throws SQLException {
+    private Connection getConnection() throws SQLException {
         if (this.conn == null || this.conn.isClosed()) {
             this.conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false", user, password);
         }
@@ -100,9 +89,10 @@ public class Update {
             
             Update update = new Update();
             update.vendedores();
-            update.produtos();
-            update.close();
+//            update.produtos();
 
+            update.produtosAlterados();
+            update.close();
         } catch (ClassNotFoundException | SQLException ex) {
             Logger.getLogger(Update.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -118,7 +108,7 @@ public class Update {
     }
 
     private void vendedores() throws SQLException {
-        Statement stmt = getCnnnection().createStatement();
+        Statement stmt = getConnection().createStatement();
         ResultSet rs = stmt.executeQuery("select DESCRICAO from vendedores_dbf");
         List<Vendedor> list = new ArrayList<>();
 
@@ -230,7 +220,7 @@ public class Update {
     }
 
     private void adicionarImagens(List<Produto> lista, Map<Integer, Produto> mapaProdutosPorCodigo, String where) throws SQLException {
-        ProdutoImagemDao pid = new ProdutoImagemDao(getCnnnection());
+        ProdutoImagemDao pid = new ProdutoImagemDao(getConnection());
         List<ProdutoImagem> imagens = pid.listar(where);
         Map<Integer, List<ProdutoImagem>> mapaImagensPorProduto = imagens.stream()
                 .collect(Collectors.groupingBy(ProdutoImagem::getProdutoCodigo, Collectors.toList()));
@@ -242,7 +232,7 @@ public class Update {
     }
 
     private void adicionarEstoques(List<Produto> lista, Map<Integer, Produto> mapaProdutosPorCodigo, String where) throws SQLException {
-        ProdutoEstoqueDao pid = new ProdutoEstoqueDao(getCnnnection());
+        ProdutoEstoqueDao pid = new ProdutoEstoqueDao(getConnection());
         List<ProdutoEstoque> imagens = pid.listar(where);
         Map<Integer, List<ProdutoEstoque>> mapaEstoquesPorProduto = imagens.stream()
                 .collect(Collectors.groupingBy(ProdutoEstoque::getProdutoCodigo, Collectors.toList()));
@@ -251,5 +241,38 @@ public class Update {
                 mapaProdutosPorCodigo.get(codigo).setEstoques(listaEstoques);
             }
         });
+    }
+
+    private void produtosAlterados() throws SQLException {
+        ProdutoDao pd = new ProdutoDao(conn);
+        long qtd = pd.quantidadeAlteradaHoje();
+        int itensPorPagina = 5000;
+        int paginaAtual = 1;
+        List<Produto> lista = null;
+        do {
+            lista = pd.listarAlteradosHoje(paginaAtual++, itensPorPagina);
+            LongStream codigos = lista.stream().mapToInt(Produto::getCodigo).asLongStream();
+            final StringBuilder sb = new StringBuilder();
+            codigos.forEachOrdered(codigo -> {
+                if (sb.length() == 0) {
+                    sb.append(" WHERE CODIGO_PRODUTO IN (");
+                } else {
+                    sb.append(",");
+                }
+                sb.append(codigo);
+            });
+
+            final Map<Integer, Produto> mapaProdutosPorCodigo = lista.stream().collect(Collectors.toMap(Produto::getCodigo, Function.identity()));
+            if (sb.length() > 0) {
+                sb.append(")");
+            }
+            String where = sb.toString();
+            adicionarImagens(lista, mapaProdutosPorCodigo, where);
+            
+            adicionarEstoques(lista, mapaProdutosPorCodigo, where.replace("CODIGO_PRODUTO", "PRODUTO_CODIGO"));
+            if (lista != null && !lista.isEmpty()) {
+                enviar(lista);
+            }
+        } while (lista != null && !lista.isEmpty());
     }
 }

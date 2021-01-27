@@ -31,6 +31,48 @@ public class ProdutoDao extends Dao {
         return quantidade;
     }
 
+    long quantidadeAlteradaHoje() throws SQLException {
+        long quantidade = 0;
+        String query = "SELECT COUNT(A.CODIGO) \n"
+                     + "  FROM PRODUTOS_DBF A JOIN PRODUTO_ESTOQUE_GLOBAL B ON A.CODIGO=B.PRODUTO_CODIGO\n"
+                     + " WHERE (DATE(A.CADASTRO) = CURDATE()\n"
+                     + "    OR  DATE(A.ALTERACAO)= CURDATE()\n"
+                     + "    OR  DATE(B.CADASTRO) = CURDATE()\n"
+                     + "    OR  DATE(B.ALTERADO) = CURDATE())\n"
+                     + "   AND A.FINALIDADE_CODIGO=1";
+        try (Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(query)) {
+            if (rs.next()) {
+                quantidade = rs.getLong(1);
+            }
+        }
+        return quantidade;
+    }
+
+    List<Produto> listarAlteradosHoje(int pagina, int registros) throws SQLException {
+        int registroInicial = (pagina - 1) * registros;
+        String query = "SELECT P.CODIGO,P.CODIGO_X,\n"
+                + "       P.CODIGO_SEQUENCIA,P.CODIGO_FABRICANTE,\n"
+                + "       P.CODIGO_ORIGINAL,P.CODIGO_BARRAS,\n"
+                + "       P.DESCRICAO,P.MARCA,\n"
+                + "       P.PRECO_PRAZO,P.CLASSE_FISCAL,P.EXCESSAO_IPI,\n"
+                + "       P.CEST,P.CODIGO_ANP,\n"
+                + "       P.PESO_LIQUIDO,\n"
+                + "       P.LARGURA_PRODUTO,P.ALTURA_PRODUTO,P.PROFUNDIDADE_PRODUTO,\n"
+                + "       P.LARGURA_EMBALAGEM,P.ALTURA_EMBALAGEM,P.PROFUNDIDADE_EMBALAGEM,\n"
+                + "       P.DESCRICAO_SITE,P.DESCRICAO_LONGA,\n"
+                + "       G.DISPONIVEL\n"
+                + "  FROM produtos_dbf P JOIN PRODUTO_ESTOQUE_GLOBAL G ON P.CODIGO=G.PRODUTO_CODIGO\n"
+                + " WHERE (DATE(P.CADASTRO) = CURDATE()\n"
+                + "    OR  DATE(P.ALTERACAO)= CURDATE()\n"
+                + "    OR  DATE(G.CADASTRO) = CURDATE()\n"
+                + "    OR  DATE(G.ALTERADO) = CURDATE())\n"
+                + "   AND P.FINALIDADE_CODIGO=1\n"
+                + " LIMIT " + registroInicial + "," + registros;
+        return listar(query);
+    }
+
+
     public List<Produto> listar(int pagina, int registros) throws SQLException {
         int registroInicial = (pagina - 1) * registros;
         String query = "SELECT P.CODIGO,P.CODIGO_X,\n"
@@ -47,6 +89,10 @@ public class ProdutoDao extends Dao {
                 + "  FROM produtos_dbf P JOIN PRODUTO_ESTOQUE_GLOBAL G ON P.CODIGO=G.PRODUTO_CODIGO\n"
                 + " WHERE P.FINALIDADE_CODIGO=1\n"
                 + " LIMIT " + registroInicial + "," + registros;
+        return listar(query);
+    }
+
+    private List<Produto> listar(String query) throws SQLException {
         System.out.println(query);
 
         List<Produto> lista = new ArrayList<>();
@@ -58,6 +104,7 @@ public class ProdutoDao extends Dao {
         }
         return lista;
     }
+
 
     private Produto lerRegistro(ResultSet rs) throws SQLException {
         Produto p = new Produto();
